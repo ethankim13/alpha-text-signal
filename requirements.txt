@@ -1,0 +1,14 @@
+# Phase 1 (data pipeline) — what you need right now
+requests>=2.31.0
+pandas>=2.2.0
+yfinance>=0.2.40
+tqdm>=4.66.0
+python-dotenv>=1.0.0
+
+# Phase 2+ (text/embeddings, modeling, evaluation) — install when we get there,
+# no need to install these yet:
+# sentence-transformers
+# scikit-learn
+# xgboost
+# mlflow
+# streamlit
