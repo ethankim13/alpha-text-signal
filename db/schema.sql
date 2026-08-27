@@ -46,3 +46,20 @@ CREATE TABLE IF NOT EXISTS filing_sections (
     PRIMARY KEY (accession_number, section_type),
     FOREIGN KEY (accession_number) REFERENCES filings (accession_number)
 );
+
+
+
+
+-- Phase 2: Embeddings
+
+-- One row per (filing, section) pair that's been embedded. Mirrors
+-- filing_sections structurally, but holds a vector instead of raw text.
+CREATE TABLE IF NOT EXISTS filing_embeddings (
+    accession_number TEXT NOT NULL,
+    section_type TEXT NOT NULL,
+    embedding TEXT NOT NULL,      -- JSON-encoded list of 384 floats
+    model_name TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    PRIMARY KEY (accession_number, section_type),
+    FOREIGN KEY (accession_number) REFERENCES filings (accession_number)
+);

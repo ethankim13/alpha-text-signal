@@ -12,3 +12,5 @@ python-dotenv>=1.0.0
 # xgboost
 # mlflow
 # streamlit
+torch
+transformers

@@ -34,3 +34,14 @@ SEC_REQUEST_DELAY_SECONDS = 0.2   # stay comfortably under SEC's ~10 req/sec gui
 
 # Storage
 DB_PATH = "data/alpha_signal.db"
+
+
+
+# Phase 2: Embeddings
+
+# I am using the embedding model all-MiniLM-L6-v2 because it runs faster on CPU.
+EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+EMBEDDING_DIM = 384  # this model's output vector size — must match schema
+MAX_TOKENS = 512 # hard limit for this model architecture
+
+MIN_CHARS_FOR_EMBEDDING = 50

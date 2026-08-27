@@ -9,6 +9,8 @@ from datetime import datetime, timezone
 
 import config
 
+import json
+
 
 def get_connection() -> sqlite3.Connection:
     """Open a connection to the project DB, creating the parent folder if needed."""
@@ -168,6 +170,52 @@ def get_filings_needing_extraction() -> list[dict]:
             (len(config.FILING_SECTIONS),),
         ).fetchall()
         return [{"accession_number": r[0], "document_url": r[1]} for r in rows] # converts each raw tuple into a dict
+    finally:
+        conn.close()
+
+
+# Phase 2: Embeddings
+
+def insert_filing_embedding(accession_number: str, section_type: str, embedding: list[float]) -> None:
+    """Takes the pieces computed in Python and writes them into the database as one clean row.
+    """
+    embedding_json = json.dumps(embedding)  # list of floats -> a single storable string
+    created_at = datetime.now(timezone.utc).isoformat()
+
+    conn = get_connection()
+    try:
+        conn.execute(
+            """
+            INSERT OR REPLACE INTO filing_embeddings (
+                accession_number, section_type, embedding, model_name, created_at
+            ) VALUES (?, ?, ?, ?, ?);
+            """,
+            (accession_number, section_type, embedding_json, config.EMBEDDING_MODEL, created_at),
+        )
+        conn.commit()  # writes are staged until commit — without this, nothing actually saves
+    finally:
+        conn.close()
+
+def get_sections_needing_embedding() -> list[dict]:
+    """Looks at every section extracted, identifies the ones that haven't been embedded yet"""
+    conn = get_connection()
+    try:
+        rows = conn.execute(
+            """
+            SELECT fs.accession_number, fs.section_type, fs.section_text
+            FROM filing_sections fs
+            LEFT JOIN filing_embeddings fe
+                ON fs.accession_number = fe.accession_number
+               AND fs.section_type = fe.section_type
+            WHERE fe.accession_number IS NULL
+              AND fs.char_count >= ?;
+            """,
+            (config.MIN_CHARS_FOR_EMBEDDING,),
+        ).fetchall()
+        return [
+            {"accession_number": r[0], "section_type": r[1], "section_text": r[2]}
+            for r in rows
+        ]
     finally:
         conn.close()
         

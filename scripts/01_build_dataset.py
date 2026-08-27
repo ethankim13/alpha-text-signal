@@ -31,7 +31,7 @@ def main():
     price_start = (date.today() - timedelta(days=config.LOOKBACK_QUARTERS * 95)).isoformat()
 
     missing_tickers = []
-    for ticker in tqdm(config.TICKERS, desc="Tickers"):
+    for ticker in tqdm(config.TICKERS, desc="Tickers"): # tqdm adds live progress bar
         if ticker not in cik_map:
             missing_tickers.append(ticker)
             continue
@@ -40,7 +40,7 @@ def main():
         name = cik_map[ticker]["name"]
         db_utils.upsert_company(ticker, cik10, name)
 
-        # --- Filings ---
+        # Filings
         filings = edgar_client.get_filings_for_ticker(
             ticker, cik10, config.FILING_TYPE, config.LOOKBACK_QUARTERS
         )
@@ -56,7 +56,7 @@ def main():
                 document_url=f["document_url"],
             )
 
-        # --- Prices ---
+        # Prices 
         price_rows = price_fetcher.fetch_price_history(ticker, start=price_start)
         if price_rows:
             db_utils.insert_prices(ticker, price_rows)

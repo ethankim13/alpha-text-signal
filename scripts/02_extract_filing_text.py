@@ -9,6 +9,7 @@ extracts risk_factors and mda, writes both to filing_sections
 import sys
 from pathlib import Path
 
+# Let this script find config.py and src/ when run directly.
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from tqdm import tqdm
@@ -28,7 +29,7 @@ def main():
     failed_counts = {section: 0 for section in config.FILING_SECTIONS}
     fetch_failures = []
 
-    for filing in tqdm(filings, desc="Filings"):
+    for filing in tqdm(filings, desc="Filings"): # tqdm adds live progress bar
         accession_number = filing["accession_number"]
         document_url = filing["document_url"]
 
