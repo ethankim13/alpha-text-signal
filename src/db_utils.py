@@ -1,7 +1,7 @@
 """
-Thin wrapper around sqlite3. No ORM — at this scale (a few thousand rows,
-one user) plain SQL is easier to reason about and easier to explain in an
-interview than dragging in SQLAlchemy for no reason.
+Only module that talks to 'data/alpha_signal.db'
+Any piece of code that wants to read or write the database goes through
+a function in this file.
 """
 import sqlite3
 from pathlib import Path
@@ -123,3 +123,51 @@ def summary() -> dict:
         return {"companies": companies, "filings": filings, "price_rows": price_rows}
     finally:
         conn.close()
+
+# Phase 1b
+
+# Bridge between the extracted text in Python and it being saved in the database
+def insert_filing_section(accession_number: str, section_type: str, section_text: str | None) -> None:
+    '''INSERT OR REPLACE ensures that old text gets replaced, not duplicated.
+    Improves re-running extraction and makes it safer.'''
+    char_count = len(section_text) if section_text else 0
+    extracted_at = datetime.now(timezone.utc).isoformat()
+
+    conn = get_connection()
+    try:
+        conn.execute(
+            """
+            INSERT OR REPLACE INTO filing_sections (
+                accession_number, section_type, section_text, char_count, extracted_at
+            ) VALUES (?, ?, ?, ?, ?);
+            """,
+            (accession_number, section_type, section_text, char_count, extracted_at),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+# Indicates what still needs extracting from the filings table
+# What is in 'filings' but doesn't have a row in 'filing_sections'
+def get_filings_needing_extraction() -> list[dict]:
+    '''Returns filings missing at least one section extraction. Counts how
+    many filing_sections rows exist per filing, and returns any filing under
+    that full count.
+    LEFT JOIN used to keep every row from filings.'''
+    conn = get_connection()
+    
+    try:
+        rows = conn.execute(
+            """
+            SELECT f.accession_number, f.document_url
+            FROM filings f
+            LEFT JOIN filing_sections fs ON f.accession_number = fs.accession_number
+            GROUP BY f.accession_number, f.document_url
+            HAVING COUNT(fs.section_type) < ?;
+            """,
+            (len(config.FILING_SECTIONS),),
+        ).fetchall()
+        return [{"accession_number": r[0], "document_url": r[1]} for r in rows] # converts each raw tuple into a dict
+    finally:
+        conn.close()
+        

@@ -2,7 +2,9 @@
 
 Testing whether quarter-over-quarter language shifts in bank 10-Q filings carry any predictive information about short-term stock moves (price change over 5 days) built with proper time-aware evaluation, not a single train/test split.
 
-## What's actually built right now
+I use SEC's structured JSON API for filing metadata, then fetch and parse the raw HTML documents directly since SEC doesn't expose section-level content as structured data.
+
+## What's built so far
 
 - `config.py` — every scope decision (tickers, filing type, target
   variable) in one place. **Read this file first.**
@@ -13,6 +15,12 @@ Testing whether quarter-over-quarter language shifts in bank 10-Q filings carry 
 - `src/db_utils.py` — all database reads/writes, re-runnable without
   duplicating data
 - `scripts/01_build_dataset.py` — runs the whole thing end to end
+- 'alpha_signal.db'
+  - SQLite Database created by my own pipeline
+1. config.py sets DB_PATH = "data/alpha_signal.db"
+2. db_utils.init_db() creates it using db/schema.sql, where `companies`, `filings`, `prices` tables are defined
+3. edgar_client.py pulls filing metadata from SEC EDGAR, and price_fetcher.py pulls prices from Yahoo Finance, and both get written into here.
+  - Basically the accumulated output of my own script
 
 **What this does NOT do yet:** download the actual text of each filing,
 extract the Risk Factors section, generate embeddings, or train anything.

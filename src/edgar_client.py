@@ -43,7 +43,7 @@ def _get(url: str) -> dict: # expects string input, returns dictionary
             "They ask for this so they can contact you if a script misbehaves — "
             "requests without it get rate-limited or blocked."
         )
-    resp = requests.get(url, headers=_HEADERS, timeout=15) # the HTTP GET request, raise error if no response <15 seconds 
+    resp = requests.get(url, headers=_HEADERS, timeout=15) # HTTP GET request, raise error if no response <15 seconds 
     resp.raise_for_status() # raises exception if there is an error
     time.sleep(config.SEC_REQUEST_DELAY_SECONDS) # 0.2 second pause after every request, makes it polite
     return resp.json()

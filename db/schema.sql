@@ -33,3 +33,16 @@ CREATE TABLE IF NOT EXISTS prices (
     PRIMARY KEY (ticker, date),
     FOREIGN KEY (ticker) REFERENCES companies (ticker)
 );
+
+
+-- One row per (filing, section) pair. Populated in Phase 1b, consumed starting in Phase 2 for embeddings.
+-- Where the results of the parser sit
+CREATE TABLE IF NOT EXISTS filing_sections (
+    accession_number TEXT NOT NULL,
+    section_type TEXT NOT NULL,      -- 'risk_factors' or 'mda'
+    section_text TEXT,
+    char_count INTEGER,
+    extracted_at TEXT NOT NULL,
+    PRIMARY KEY (accession_number, section_type),
+    FOREIGN KEY (accession_number) REFERENCES filings (accession_number)
+);

@@ -1,7 +1,7 @@
 # Cross-industry, 2 large/mid-cap names per sector, 8 sectors. This is
 # done to test whether a text-shift signal generalizes across very 
 # different businesses, not just one industry's boilerplate.
-#
+
 # IMPORTANT consequence for later: the signal itself (embedding distance /
 # sentiment delta between a company's own consecutive filings) is computed
 # WITHIN a company, so mixing industries doesn't break that step. But once
@@ -12,7 +12,7 @@
 TICKERS = [
     "MSFT", "ADBE",  # Technology
     "TGT", "NKE",    # Retail
-    "PFE", "ABBV",   # Healthcare / pharma
+    "PFE", "ABBV",   # Healthcare/pharma
     "XOM", "COP",    # Energy
     "CAT", "HON",    # Industrials
     "KO", "PG",      # Consumer staples
@@ -23,7 +23,7 @@ TICKERS = [
 # Filing scope
 FILING_TYPE = "10-Q"              # quarterly reports, more data points over time than 10-K 
 LOOKBACK_QUARTERS = 12            # ~3 years of history per ticker
-FILING_SECTION = "risk_factors"   # which section we'll extract text from
+FILING_SECTIONS = ["risk_factors", "mda"]   # which section we'll extract text from, NOW ADDED MD&A in Phase 1b
 
 # Target variable
 FORWARD_RETURN_DAYS = 5           # predicting 5-trading-day forward return after each filing date

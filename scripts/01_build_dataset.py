@@ -46,7 +46,7 @@ def main():
         )
         for f in filings:
             db_utils.insert_filing(
-                accession_number=f["accessionNumber"],
+                accession_number=f["accessionNumber"], # unique tracking code for each filing
                 ticker=ticker,
                 cik=cik10,
                 form_type=f["form"],

@@ -5,3 +5,7 @@ data/company_tickers.json
 .env
 .venv/
 venv/
+data/raw_filings/
+data/alpha_signal.db
+scratch*.py
+scratch*.py
