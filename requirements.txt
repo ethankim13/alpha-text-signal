@@ -8,8 +8,8 @@ python-dotenv>=1.0.0
 # Phase 2+ (text/embeddings, modeling, evaluation) — install when we get there,
 # no need to install these yet:
 # sentence-transformers
-# scikit-learn
-# xgboost
+scikit-learn
+xgboost
 # mlflow
 # streamlit
 torch

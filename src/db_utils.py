@@ -218,4 +218,56 @@ def get_sections_needing_embedding() -> list[dict]:
         ]
     finally:
         conn.close()
-        
+
+
+# Phase 3a: Drift-scoring
+def get_embeddings_for_ticker(ticker: str, section_type: str) -> list[dict]:
+    """All embeddings for one company/section, ordered oldest-to-newest —
+    allows us to compare each filing to the one immediately before it."""
+    conn = get_connection()
+    try:
+        rows = conn.execute(
+            """
+            SELECT f.accession_number, f.filing_date, fe.embedding
+            FROM filing_embeddings fe
+            JOIN filings f ON fe.accession_number = f.accession_number
+            WHERE f.ticker = ? AND fe.section_type = ?
+            ORDER BY f.filing_date ASC;
+            """,
+            (ticker, section_type),
+        ).fetchall()
+        return [{"accession_number": r[0], "filing_date": r[1], "embedding": json.loads(r[2])} for r in rows]
+    finally:
+        conn.close()
+
+def insert_drift_score(
+    ticker: str,
+    accession_number: str,
+    section_type: str,
+    filing_date: str,
+    prior_accession_number: str,
+    cosine_similarity: float,
+    drift_score: float,
+) -> None:
+    """Idempotent write into drift_scores — same INSERT OR REPLACE pattern
+    as insert_filing_embedding. cosine_similarity and numpy floats need
+    float() conversion since sqlite3 can't store numpy's float32 type directly."""
+    created_at = datetime.now(timezone.utc).isoformat()
+
+    conn = get_connection()
+    try:
+        conn.execute(
+            """
+            INSERT OR REPLACE INTO drift_scores (
+                ticker, accession_number, section_type, filing_date,
+                prior_accession_number, cosine_similarity, drift_score, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+            """,
+            (
+                ticker, accession_number, section_type, filing_date,
+                prior_accession_number, float(cosine_similarity), float(drift_score), created_at,
+            ),
+        )
+        conn.commit()
+    finally:
+        conn.close()

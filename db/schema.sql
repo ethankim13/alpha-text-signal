@@ -63,3 +63,17 @@ CREATE TABLE IF NOT EXISTS filing_embeddings (
     PRIMARY KEY (accession_number, section_type),
     FOREIGN KEY (accession_number) REFERENCES filings (accession_number)
 );
+
+-- Phase 3a: Drift Scoring
+CREATE TABLE IF NOT EXISTS drift_scores (
+    ticker TEXT NOT NULL,
+    accession_number TEXT NOT NULL,      -- the LATER of the two filings being compared
+    section_type TEXT NOT NULL,
+    filing_date TEXT NOT NULL,
+    prior_accession_number TEXT NOT NULL,
+    cosine_similarity REAL NOT NULL,
+    drift_score REAL NOT NULL,           -- 1 - cosine_similarity, so higher = more language change
+    created_at TEXT NOT NULL,
+    PRIMARY KEY (accession_number, section_type),
+    FOREIGN KEY (accession_number) REFERENCES filings (accession_number)
+);
