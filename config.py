@@ -45,3 +45,19 @@ EMBEDDING_DIM = 384  # this model's output vector size — must match schema
 MAX_TOKENS = 512 # hard limit for this model architecture
 
 MIN_CHARS_FOR_EMBEDDING = 50
+
+
+# Phase 3b: Modeling
+
+# Sector previously existed as a comment above TICKERS list in this file
+# A dictionary allows it to become real, queryable data
+TICKER_SECTORS = {
+    "MSFT": "Technology", "ADBE": "Technology",
+    "TGT": "Retail", "NKE": "Retail",
+    "PFE": "Healthcare", "ABBV": "Healthcare",
+    "XOM": "Energy", "COP": "Energy",
+    "CAT": "Industrials", "HON": "Industrials",
+    "KO": "Consumer Staples", "PG": "Consumer Staples",
+    "DAL": "Airlines", "UAL": "Airlines",
+    "VZ": "Telecom", "T": "Telecom",
+}
