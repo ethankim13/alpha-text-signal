@@ -6,7 +6,7 @@
 
 This does not download the actual filing text or build any features. 
 This script's job is to prove the pipeline works end to
-end and get real data sitting in your database.
+end and get real data sitting in the database.
 """
 import sys
 from datetime import date, timedelta
@@ -28,7 +28,7 @@ def main():
     print("Fetching SEC ticker -> CIK map (cached after first run)...")
     cik_map = edgar_client.get_cik_map()
 
-    price_start = (date.today() - timedelta(days=config.LOOKBACK_QUARTERS * 95)).isoformat()
+    
 
     missing_tickers = []
     for ticker in tqdm(config.TICKERS, desc="Tickers"): # tqdm adds live progress bar
@@ -56,10 +56,16 @@ def main():
                 document_url=f["document_url"],
             )
 
-        # Prices 
-        price_rows = price_fetcher.fetch_price_history(ticker, start=price_start)
-        if price_rows:
-            db_utils.insert_prices(ticker, price_rows)
+        # Prices: start 14 days before this ticker's OLDEST filing
+        if filings:
+            earliest_filing = min(date.fromisoformat(f["filingDate"]) for f in filings)
+            price_start = (earliest_filing - timedelta(days=14)).isoformat()
+
+            price_rows = price_fetcher.fetch_price_history(ticker, start=price_start)
+            if price_rows:
+                db_utils.insert_prices(ticker, price_rows)
+            else:
+                print(f"WARNING: no prices downloaded for {ticker}")
 
     if missing_tickers:
         print(f"\nWARNING: couldn't resolve CIK for: {missing_tickers} — check spelling in config.py")
