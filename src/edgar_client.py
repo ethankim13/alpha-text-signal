@@ -14,8 +14,8 @@ SEC requires a descriptive User-Agent header on every request (set in
 config.py) and asks for no more than ~10 requests/second. We sleep
 between requests to stay well under that.
 
-EDGAR: name of SEC's public filing database (Electronic Data Gathering, Analysis, and Retrieval)
-client: the code responsible for talking to EDGAR
+- EDGAR: name of SEC's public filing database (Electronic Data Gathering, Analysis, and Retrieval)
+- client: the code responsible for talking to EDGAR
 
 """
 import json # used to convert between JSON text and Python dictionaries/lists

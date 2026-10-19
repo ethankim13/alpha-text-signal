@@ -6,11 +6,10 @@ _tokenizer = None
 _model = None
 
 def _load_model():
-    """Loads once, reused across every call — loading a model from disk is
-    slow, you don't want to repeat it per filing."""
+    """Loads once, reused across every call. Loading a model from disk is slow."""
     global _tokenizer, _model
     if _model is None:
-        _tokenizer = AutoTokenizer.from_pretrained(config.EMBEDDING_MODEL)
+        _tokenizer = AutoTokenizer.from_pretrained(config.EMBEDDING_MODEL) # downloads model's weights and tokenizer (pretrained transformer)
         _model = AutoModel.from_pretrained(config.EMBEDDING_MODEL)
         _model.eval()  # inference mode, not training
 

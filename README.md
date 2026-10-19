@@ -2,20 +2,22 @@
 
 Testing whether quarter-over-quarter language drift in 10-Q filings, specifically the Risk Factors (Item 1A) and MD&A (Item 2) sections, carries any predictive information about short-term stock returns (5-day forward return following each filing).
 
-This is a research project, not a product. The deliverable is a finding: does the signal have predictive edge or not, evaluated with a time-aware, walk-forward backtest rather than a single train/test split. A null result is a legitimate outcome here, as long as the methodology is sound, and that is in fact what I found.
+This is a research project, not a product. The deliverable is a finding: does the signal have predictive edge or not, evaluated with a time-aware, walk-forward out-of-sample evaluation rather than a single train/test split. A null result is a legitimate outcome here, as long as the methodology is sound, and that is in fact what I found.
 
 **Scope:** 16 tickers across 8 sectors (tech, retail, healthcare, energy, industrials, consumer staples, airlines, telecom), roughly 3 years of 10-Q history per ticker, resulting in 161 filings with both a computed drift score and a measurable 5-day forward return.
 
 ## Results
 
-I ran a walk-forward backtest (expanding window, 5 folds, an initial training window covering the earliest 50% of filings by date) across four models: Ridge, Lasso, Elastic Net, and Random Forest. Every model used drift_score_mda and drift_score_risk_factors as numeric features, plus one-hot encoded sector, to predict forward_return.
+I ran a walk-forward out-of-sample evaluation (expanding window, 5 folds, an initial training window covering the earliest 50% of filings by date) across four models: Ridge, Lasso, Elastic Net, and Random Forest. Every model used drift_score_mda and drift_score_risk_factors as numeric features, plus one-hot encoded sector, to predict forward_return.
 
 | Model | R2 | Correlation | N (out-of-sample predictions) |
 |---|---|---|---|
-| Ridge | -0.1962 | -0.2544 | 81 |
-| Lasso | -0.0966 | -0.2389 | 81 |
-| Elastic Net | -0.0966 | -0.2389 | 81 |
-| Random Forest | -0.3250 | -0.3186 | 81 |
+| Ridge | -0.1767 | -0.2368 | 81 |
+| Lasso | -0.0788 | -0.2576 | 81 |
+| Elastic Net | -0.0788 | -0.2576 | 81 |
+| Random Forest | -0.2942 | -0.2216 | 81 |
+
+- Missing values are filled using training-fold means only, and each training row is used only if its 5-day return finished before the test fold began. 
 
 All four models produced negative R2 on out-of-sample predictions, meaning each performed worse than simply guessing the average forward return for every filing. Correlation between predicted and actual returns was also negative and modest in magnitude across the board.
 
@@ -28,7 +30,10 @@ A few honest caveats worth stating rather than glossing over:
 - A 5-day forward return is a narrow, noisy target. If a filing-driven price effect exists, it may show up on a different horizon, or it may be swamped by unrelated market news within that window.
 - Sector, encoded as 8 one-hot columns, adds real dimensionality relative to roughly 150 rows, which likely hurts the linear models more than it helps.
 
-I am reporting this result as is, rather than tuning parameters until something looks better. A negative or near-zero result from a sound methodology is a legitimate outcome for this kind of question, and it is a more honest thing to bring into an interview than an inflated one.
+I am reporting this result as is, rather than tuning parameters until something looks better.git status
+git add README.md src/edgar_client.py src/embedder.py
+git commit -m "Update README with corrected results and known limitations"
+git push
 
 ### Possible next steps (not built)
 
@@ -63,15 +68,15 @@ A real finding surfaced here: Risk Factors extraction was clearly bimodal. Rough
 - Each section is chunked into 510-token windows before embedding, since most sections run well past the model's 512-token limit, and the resulting chunk vectors are averaged into one vector per section
 - `scripts/03_generate_embeddings.py`, orchestrates embedding generation for every section that has real content
 
-I used inference only, not fine-tuning, since the pretrained encoder is being used purely as a feature extractor. Fine-tuning a transformer on roughly 150 examples would almost certainly overfit. The actual learning in this project happens downstream, in the regularized models used for the backtest.
+I used inference only, not fine-tuning, since the pretrained encoder is being used purely as a feature extractor. Fine-tuning a transformer on roughly 150 examples would almost certainly overfit. The actual learning in this project happens downstream, in the regularized models used for the out-of-sample evaluation.
 
 **Phase 3, drift scoring and modeling**
 - `src/drift_scorer.py`, computes cosine similarity between a company's consecutive filing embeddings, same section type, and converts it to a drift score (1 minus similarity, so higher means more language change)
 - `scripts/04_compute_drift.py`, orchestrates drift scoring for every ticker and section type, skipping each ticker's first filing since there is no prior filing to compare it to
 - `src/dataset_builder.py`, joins drift scores to each filing's 5-day forward return (pulled from `prices`, aligned to the first trading day on or after the filing date) and to sector, producing one row per filing
 - `scripts/05_build_dataset.py`, builds and saves the final modeling dataset to `data/model_dataset.csv`
-- `src/modeling.py`, defines the feature preparation, the four models being compared, and the walk-forward backtest logic
-- `scripts/06_train_and_backtest.py`, runs the backtest and prints results per model
+- `src/modeling.py`, defines the feature preparation, the four models being compared, and the walk-forward out-of-sample evaluation logic
+- `scripts/06_train_and_backtest.py`, runs the out-of-sample evaluation and prints results per model
 
 ## Setup
 
@@ -92,7 +97,7 @@ python scripts/02_extract_filing_text.py    # filing text extraction
 python scripts/03_generate_embeddings.py    # embeddings
 python scripts/04_compute_drift.py          # drift scores
 python scripts/05_build_dataset.py          # final modeling dataset
-python scripts/06_train_and_backtest.py     # walk-forward backtest
+python scripts/06_train_and_backtest.py     # walk-forward out-of-sample evaluation
 ```
 
 All are safe to rerun. Already processed filings, sections, embeddings, and drift scores are skipped rather than redone.
