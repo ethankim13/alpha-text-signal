@@ -23,17 +23,12 @@ All four models produced negative R2 on out-of-sample predictions, meaning each 
 
 **This is a null result.** At this sample size, quarter-over-quarter language drift in Risk Factors and MD&A, using this feature set and this model family, does not show a reliable predictive relationship with 5-day forward stock returns.
 
-A few honest caveats worth stating rather than glossing over:
+A few caveats:
 
 - 81 out-of-sample predictions is a small evaluation set. A negative correlation of this size is well within the range that noise alone could produce.
-- Mean-pooling chunk embeddings into a single vector per section likely smooths over the specific sentences most responsible for real language change, diluting exactly the signal this project is testing for.
 - A 5-day forward return is a narrow, noisy target. If a filing-driven price effect exists, it may show up on a different horizon, or it may be swamped by unrelated market news within that window.
-- Sector, encoded as 8 one-hot columns, adds real dimensionality relative to roughly 150 rows, which likely hurts the linear models more than it helps.
 
-I am reporting this result as is, rather than tuning parameters until something looks better.git status
-git add README.md src/edgar_client.py src/embedder.py
-git commit -m "Update README with corrected results and known limitations"
-git push
+I am reporting this result as is, rather than tuning parameters until something looks better.
 
 ### Possible next steps (not built)
 
@@ -110,9 +105,6 @@ sqlite3 data/alpha_signal.db "SELECT section_type, COUNT(*), AVG(char_count) FRO
 sqlite3 data/alpha_signal.db "SELECT section_type, COUNT(*), AVG(drift_score) FROM drift_scores GROUP BY section_type;"
 ```
 
-If `sqlite3` is not installed as a CLI tool, [DB Browser for SQLite](https://sqlitebrowser.org/) is a free GUI alternative. I never open the `.db` file directly in a text editor, since it is a binary format and editing it as text will corrupt it.
-
-Note: `data/alpha_signal.db` and `data/raw_filings/` are gitignored, not committed. Both are fully reproducible by rerunning the scripts above, so I treat them as derived artifacts rather than source files. `data/model_dataset.csv` is small and is committed, since it is the actual research dataset behind the results above.
 
 ## Why this scope
 
